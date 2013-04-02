@@ -119,7 +119,7 @@ int doHash(char *b,int len)
     int i, diff = 0;
     oneBlk = 8*len;
 
-    if (Skein_Hash(b,oneBlk,hashVal) != SKEIN_SUCCESS)
+    if (Skein_Hash((unsigned char *)b,oneBlk,hashVal) != SKEIN_SUCCESS)
         printf("Skein_Hash != SUCCESS");
 
     for(i = 0; i < 128; i++) {
@@ -261,7 +261,7 @@ int main(int argc,char *argv[])
         	printf("%s->%d\n",data,diff);
 		char buffer[4096];
 		snprintf( buffer, sizeof(buffer), "http://crackertracker.computmaxer.net/submit/?original=%s&diff=%d&submitted_by=%s", data, diff, reporter);
-		char *response = do_web_request(buffer);
+		do_web_request(buffer);
             }
 	    ascii_incr(data);
         }
