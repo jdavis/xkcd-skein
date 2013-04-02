@@ -138,7 +138,7 @@ char *do_web_request(char *url)
     CURL *curl_handle = NULL;
     /* to keep the response */
     char *response = NULL;
-    int error;
+    CURLcode error;
 
     /* initializing curl and setting the url */
     curl_handle = curl_easy_init();
@@ -155,7 +155,10 @@ char *do_web_request(char *url)
     curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &response);
 
     /* perform the request */
-    if (curl_easy_perform(curl_handle) != 0) response = NULL;
+    if ((error = curl_easy_perform(curl_handle)) != 0) {
+        response = NULL;
+        fprintf(stderr, "%s\n", curl_easy_strerror(error));
+    }
 
     /* cleaning all curl stuff */
     curl_easy_cleanup(curl_handle);
