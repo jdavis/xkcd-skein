@@ -36,23 +36,10 @@ inline void ascii_incr_char(char *c, bool *carry_inout);
 
 
 /* select the context size and init the context */
-int Skein_Init(int blkSize,hashState *state, int hashbitlen)
-    {
-    switch (blkSize)
-        {
-        case  256:
-            state->statebits = 64*SKEIN_256_STATE_WORDS;
-            return Skein_256_Init(&state->u.ctx_256,(size_t) hashbitlen);
-        case  512:
-            state->statebits = 64*SKEIN_512_STATE_WORDS;
-            return Skein_512_Init(&state->u.ctx_512,(size_t) hashbitlen);
-        case 1024:
-            state->statebits = 64*SKEIN1024_STATE_WORDS;
-            return Skein1024_Init(&state->u.ctx1024,(size_t) hashbitlen);
-        default:
-            return SKEIN_FAIL;
-        }
-    }
+int Skein_Init(hashState *state) {
+    state->statebits = 64*SKEIN1024_STATE_WORDS;
+    return Skein1024_Init(&state->u.ctx1024, 1024);
+}
 
 /* process data to be hashed */
 int Skein_Update(hashState *state, const BitSequence *data, DataLength databitlen)
@@ -60,15 +47,8 @@ int Skein_Update(hashState *state, const BitSequence *data, DataLength databitle
     /* only the final Update() call is allowed do partial bytes, else assert an error */
     Skein_Assert((state->u.h.T[1] & SKEIN_T1_FLAG_BIT_PAD) == 0 || databitlen == 0, FAIL);
 
-    if ((databitlen & 7) == 0)
-        {
-        switch (state->statebits)
-            {
-            case  512:  return Skein_512_Update(&state->u.ctx_512,data,databitlen >> 3);
-            case  256:  return Skein_256_Update(&state->u.ctx_256,data,databitlen >> 3);
-            case 1024:  return Skein1024_Update(&state->u.ctx1024,data,databitlen >> 3);
-            default: return SKEIN_FAIL;
-            }
+    if ((databitlen & 7) == 0) {
+            return Skein1024_Update(&state->u.ctx1024,data,databitlen >> 3);
         }
     else
         {
@@ -76,23 +56,11 @@ int Skein_Update(hashState *state, const BitSequence *data, DataLength databitle
         u08b_t mask,*p;
 
 #if (!defined(_MSC_VER)) || (MSC_VER >= 1200)                 /* MSC v4.2 gives (invalid) warning here!!  */
-        Skein_assert(&state->u.h == &state->u.ctx_256.h);     /* sanity checks: allow u.h --> all contexts */
-        Skein_assert(&state->u.h == &state->u.ctx_512.h);
         Skein_assert(&state->u.h == &state->u.ctx1024.h);
 #endif
-        switch (state->statebits)
-            {
-            case  512: Skein_512_Update(&state->u.ctx_512,data,bCnt);
-                       p    = state->u.ctx_512.b;
-                       break;
-            case  256: Skein_256_Update(&state->u.ctx_256,data,bCnt);
-                       p    = state->u.ctx_256.b;
-                       break;
-            case 1024: Skein1024_Update(&state->u.ctx1024,data,bCnt);
-                       p    = state->u.ctx1024.b;
-                       break;
-            default:   return FAIL;
-            }
+        Skein1024_Update(&state->u.ctx1024,data,bCnt);
+        p    = state->u.ctx1024.b;
+
         Skein_Set_Bit_Pad_Flag(state->u.h);                     /* set tweak flag for the final call */
         /* now "pad" the final partial byte the way NIST likes */
         bCnt = state->u.h.bCnt;         /* get the bCnt value (same location for all block sizes) */
@@ -105,24 +73,17 @@ int Skein_Update(hashState *state, const BitSequence *data, DataLength databitle
     }
 
 /* finalize hash computation and output the result (hashbitlen bits) */
-int Skein_Final(hashState *state, BitSequence *hashval)
-    {
-    switch (state->statebits)
-        {
-        case  512:  return Skein_512_Final(&state->u.ctx_512,hashval);
-        case  256:  return Skein_256_Final(&state->u.ctx_256,hashval);
-        case 1024:  return Skein1024_Final(&state->u.ctx1024,hashval);
-        default:    return SKEIN_FAIL;
-        }
-    }
+int Skein_Final(hashState *state, BitSequence *hashval) {
+    return Skein1024_Final(&state->u.ctx1024,hashval);
+}
 
 
 /* all-in-one hash function */
-int Skein_Hash(int blkSize,int hashbitlen, const BitSequence *data, /* all-in-one call */
+int Skein_Hash(const BitSequence *data, /* all-in-one call */
                 DataLength databitlen,BitSequence *hashval)
     {
     hashState  state;
-    int r = Skein_Init(blkSize,&state,hashbitlen);
+    int r = Skein_Init(&state);
     if (r == SKEIN_SUCCESS)
         { /* these calls do not fail when called properly */
         r = Skein_Update(&state,data,databitlen);
@@ -158,7 +119,7 @@ int doHash(char *b,int len)
     int i, diff = 0;
     oneBlk = 8*len;
 
-    if (Skein_Hash(1024,1024,b,oneBlk,hashVal) != SKEIN_SUCCESS)
+    if (Skein_Hash(b,oneBlk,hashVal) != SKEIN_SUCCESS)
         printf("Skein_Hash != SUCCESS");
 
     for(i = 0; i < 128; i++) {
