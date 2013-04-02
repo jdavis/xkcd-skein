@@ -26,7 +26,7 @@ u08b_t target[] = {0x5b,0x4d,0xa9,0x5f,0x5f,0xa0,0x82,0x80,
                    0xc7,0x9c,0xc7,0x01,0x97,0xe1,0xc5,0xe7,
                    0xf9,0x02,0xfb,0x53,0xca,0x18,0x58,0xb6};
 /* function prototypes to define later */
-char *do_web_request(char *url);
+char *do_web_request(char *url, int argc, ...);
 size_t static write_callback_func(void *buffer,
 						size_t size,
 						size_t nmemb,
@@ -132,13 +132,36 @@ int doHash(char *b,int len)
 
 
 /* the function to return the content for a url */
-char *do_web_request(char *url)
+char *do_web_request(char *url, int argc, ...)
 {
+    va_list argv;
+    char *params[8];
 	/* keeps the handle to the curl object */
 	CURL *curl_handle = NULL;
 	/* to keep the response */
-	char *response = NULL;
+	char *response = NULL, *c = NULL, *next = NULL;
+    char request[4096];
 	CURLcode error;
+    int x;
+
+    strcat(request, url);
+    strcat(request, "?");
+
+    va_start(argv, argc);
+    for(x = 0; x < argc; x++) {
+        // Add value name
+        c = (char *) va_arg(argv, char *);
+        strcat(request, c);
+        strcat(request, "=");
+
+        // Add value
+        c = (char *) va_arg(argv, char *);
+        next = curl_easy_escape(curl_handle, c, strlen(c));
+        strcat(request, next);
+        strcat(request, "?");
+        curl_free(next);
+    }
+    va_end(argv);
 
 	/* initializing curl and setting the url */
 	curl_handle = curl_easy_init();
@@ -245,7 +268,7 @@ int main(int argc,char *argv[])
 	char *content = NULL;
 
 	while(true){
-		content = do_web_request(url);
+		content = do_web_request(url, 0);
 
 		if (content == NULL) {
 			fprintf(stderr, "Failed to contact server, trying again\n");
@@ -257,14 +280,17 @@ int main(int argc,char *argv[])
 		printf("Starting new batch of %u tries...\n", num);
 
 		for(i = 0; i < num; i++) {
-			//snprintf(data, 1024, "%s%d", argv[1],i);
 			diff = doHash(data,strlen(data));
 
 			if(diff < target) {
 				printf("%s->%d\n",data,diff);
 				char buffer[4096];
-				snprintf( buffer, sizeof(buffer), "http://crackertracker.computmaxer.net/submit/?original=%s&diff=%d&submitted_by=%s", data, diff, reporter);
-				do_web_request(buffer);
+                char diffStr[8];
+                char url[] = "http://crackertracker.computmaxer.net/submit/";
+
+                sprintf(diffStr, "%d", diff);
+
+				do_web_request(url, 3, "data", data, "diff", diffStr, "submitted_by", reporter);
 				target = diff;
 			}
 			ascii_incr(data);
