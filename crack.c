@@ -164,7 +164,7 @@ char *do_web_request(char *url, int argc, ...)
 
 	/* initializing curl and setting the url */
 	curl_handle = curl_easy_init();
-	curl_easy_setopt(curl_handle, CURLOPT_URL, url);
+	curl_easy_setopt(curl_handle, CURLOPT_URL, request);
 	curl_easy_setopt(curl_handle, CURLOPT_HTTPGET, 1);
 
 	/* follow locations specified by the response header */
