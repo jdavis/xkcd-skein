@@ -262,38 +262,29 @@ int main(int argc,char *argv[])
 	int target = atoi(argv[1]);
 	char *reporter = argv[2];
 	//BLOCK SIZE
-	int num = 50000000;
-	//Request to get the block start position
-	char *url = "http://crackertracker.computmaxer.net/next_block";
-	char *content = NULL;
+	
+	srand(time(NULL));
+	for (i=0; i<32; i++) {
+		data[i] = (rand() % 20) + 65;
+	}
+	data[32] = 0;
+
+	printf("Starting with a prefix of:\n%s\n", data);
 
 	while(true){
-		content = do_web_request(url, 0);
+		diff = doHash(data,strlen(data));
 
-		if (content == NULL) {
-			fprintf(stderr, "Failed to contact server, trying again\n");
-			continue;
+		if(diff < target) {
+			printf("%s->%d\n",data,diff);
+			char buffer[4096];
+            char diffStr[8];
+            char url[] = "http://crackertracker.computmaxer.net/submit/";
+
+            sprintf(diffStr, "%d", diff);
+
+			do_web_request(url, 6, "original", data, "diff", diffStr, "submitted_by", reporter);
+			target = diff;
 		}
-
-		strcpy(data, content);
-
-		printf("Starting new batch of %u tries...\n", num);
-
-		for(i = 0; i < num; i++) {
-			diff = doHash(data,strlen(data));
-
-			if(diff < target) {
-				printf("%s->%d\n",data,diff);
-				char buffer[4096];
-                char diffStr[8];
-                char url[] = "http://crackertracker.computmaxer.net/submit/";
-
-                sprintf(diffStr, "%d", diff);
-
-				do_web_request(url, 6, "original", data, "diff", diffStr, "submitted_by", reporter);
-				target = diff;
-			}
-			ascii_incr(data);
-		}
+		ascii_incr(data);
 	}
 }
