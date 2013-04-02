@@ -1,9 +1,9 @@
-To compile:
+# ISU's xkcd Skein Breaker
 
-gcc -c *.c
-gcc -o xkcd *.o -lcurl
+## Compile
 
+    make
 
-To run:
+## Run
 
-./xkcd 400
+    ./xkcd 400 'your name'
