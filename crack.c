@@ -177,6 +177,7 @@ char *do_web_request(char *url)
     CURL *curl_handle = NULL;
     /* to keep the response */
     char *response = NULL;
+    int error;
 
     /* initializing curl and setting the url */
     curl_handle = curl_easy_init();
@@ -193,7 +194,7 @@ char *do_web_request(char *url)
     curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &response);
 
     /* perform the request */
-    curl_easy_perform(curl_handle);
+    if (curl_easy_perform(curl_handle) != 0) return NULL;
 
     /* cleaning all curl stuff */
     curl_easy_cleanup(curl_handle);
@@ -279,9 +280,14 @@ int main(int argc,char *argv[])
     char *content = NULL;
 
     while(true){
-    	content = do_web_request(url);
+        content = do_web_request(url);
 
-    	strcpy(data, content);
+        if (content == NULL) {
+            fprintf(stderr, "Failed to contact server, trying again\n");
+            continue;
+        }
+
+        strcpy(data, content);
 
     	for(i = 0; i < num; i++) {
             //snprintf(data, 1024, "%s%d", argv[1],i);
