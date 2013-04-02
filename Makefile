@@ -1,6 +1,6 @@
 WARNINGS = -Wall
 CC = gcc
-CFLAGS = $(WARNINGS)
+CFLAGS = -o3 $(WARNINGS)
 TARGET = xkcd
 LIBS = -lcurl
 DEPS = skein.o skein_block.o crack.o
@@ -11,7 +11,8 @@ $(TARGET): $(DEPS)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(TARGET) $(DEPS) $(LFLAGS) $(LIBS)
 
 %.o: %.c
-	$(CC) -c -o $@ $< $(CFLAGS)
+	$(CC) $(CFLAGS) -c -o $@ $< 
 
 clean:
-	rm *.o
+	rm --force *.o
+	rm --force $(TARGET)

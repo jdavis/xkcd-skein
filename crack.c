@@ -254,9 +254,12 @@ int main(int argc,char *argv[])
 
 		strcpy(data, content);
 
+		printf("Starting new batch of %u tries...\n", num);
+
 		for(i = 0; i < num; i++) {
 			//snprintf(data, 1024, "%s%d", argv[1],i);
 			diff = doHash(data,strlen(data));
+
 			if(diff < target) {
 				printf("%s->%d\n",data,diff);
 				char buffer[4096];
