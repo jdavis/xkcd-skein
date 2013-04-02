@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "skein.h"
 #include "SHA3api_ref.h"
@@ -244,7 +246,7 @@ int main(int argc,char *argv[])
 	char *reporter = argv[2];
 	//BLOCK SIZE
 	
-	srand(time(NULL));
+	srand(time(NULL) + getpid());
 	for (i=0; i<32; i++) {
 		data[i] = (rand() % 26) + 65;
 	}
