@@ -290,7 +290,7 @@ int main(int argc,char *argv[])
 
                 sprintf(diffStr, "%d", diff);
 
-				do_web_request(url, 3, "data", data, "diff", diffStr, "submitted_by", reporter);
+				do_web_request(url, 3, "original", data, "diff", diffStr, "submitted_by", reporter);
 				target = diff;
 			}
 			ascii_incr(data);
