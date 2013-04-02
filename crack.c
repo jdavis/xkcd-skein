@@ -258,10 +258,11 @@ int main(int argc,char *argv[])
             //snprintf(data, 1024, "%s%d", argv[1],i);
             diff = doHash(data,strlen(data));
             if(diff < target) {
-        	printf("%s->%d\n",data,diff);
-		char buffer[4096];
-		snprintf( buffer, sizeof(buffer), "http://crackertracker.computmaxer.net/submit/?original=%s&diff=%d&submitted_by=%s", data, diff, reporter);
-		do_web_request(buffer);
+            	printf("%s->%d\n",data,diff);
+        		char buffer[4096];
+        		snprintf( buffer, sizeof(buffer), "http://crackertracker.computmaxer.net/submit/?original=%s&diff=%d&submitted_by=%s", data, diff, reporter);
+        		do_web_request(buffer);
+                target = diff;
             }
 	    ascii_incr(data);
         }
