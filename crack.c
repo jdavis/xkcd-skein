@@ -135,7 +135,6 @@ int doHash(char *b,int len)
 char *do_web_request(char *url, int argc, ...)
 {
     va_list argv;
-    char *params[8];
 	/* keeps the handle to the curl object */
 	CURL *curl_handle = NULL;
 	/* to keep the response */
@@ -275,8 +274,7 @@ int main(int argc,char *argv[])
 		diff = doHash(data,strlen(data));
 
 		if(diff < target) {
-			printf("%s->%d\n",data,diff);
-			char buffer[4096];
+			printf("%s->%d\n", data, diff);
             char diffStr[8];
             char url[] = "http://crackertracker.computmaxer.net/submit/";
 
