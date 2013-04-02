@@ -5,10 +5,10 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
- 
+
 #include "skein.h"
 #include "SHA3api_ref.h"
- 
+
 u08b_t target[] = {0x5b,0x4d,0xa9,0x5f,0x5f,0xa0,0x82,0x80,
                    0xfc,0x98,0x79,0xdf,0x44,0xf4,0x18,0xc8,
                    0xf9,0xf1,0x2b,0xa4,0x24,0xb7,0x75,0x7d,
@@ -34,7 +34,7 @@ size_t static write_callback_func(void *buffer,
 inline bool ascii_incr(char *str);
 inline void ascii_incr_char(char *c, bool *carry_inout);
 
- 
+
 /* select the context size and init the context */
 int Skein_Init(int blkSize,hashState *state, int hashbitlen)
     {
@@ -53,13 +53,13 @@ int Skein_Init(int blkSize,hashState *state, int hashbitlen)
             return SKEIN_FAIL;
         }
     }
- 
+
 /* process data to be hashed */
 int Skein_Update(hashState *state, const BitSequence *data, DataLength databitlen)
     {
     /* only the final Update() call is allowed do partial bytes, else assert an error */
     Skein_Assert((state->u.h.T[1] & SKEIN_T1_FLAG_BIT_PAD) == 0 || databitlen == 0, FAIL);
- 
+
     if ((databitlen & 7) == 0)
         {
         switch (state->statebits)
@@ -74,7 +74,7 @@ int Skein_Update(hashState *state, const BitSequence *data, DataLength databitle
         {
         size_t bCnt = (databitlen >> 3) + 1;                  /* number of bytes to handle */
         u08b_t mask,*p;
- 
+
 #if (!defined(_MSC_VER)) || (MSC_VER >= 1200)                 /* MSC v4.2 gives (invalid) warning here!!  */
         Skein_assert(&state->u.h == &state->u.ctx_256.h);     /* sanity checks: allow u.h --> all contexts */
         Skein_assert(&state->u.h == &state->u.ctx_512.h);
@@ -99,11 +99,11 @@ int Skein_Update(hashState *state, const BitSequence *data, DataLength databitle
         Skein_assert(bCnt != 0);        /* internal sanity check: there IS a partial byte in the buffer! */
         mask = (u08b_t) (1u << (7 - (databitlen & 7)));         /* partial byte bit mask */
         p[bCnt-1]  = (u08b_t)((p[bCnt-1] & (0-mask)) | mask);   /* apply bit padding on final byte (in the buffer) */
- 
+
         return SUCCESS;
         }
     }
- 
+
 /* finalize hash computation and output the result (hashbitlen bits) */
 int Skein_Final(hashState *state, BitSequence *hashval)
     {
@@ -115,8 +115,8 @@ int Skein_Final(hashState *state, BitSequence *hashval)
         default:    return SKEIN_FAIL;
         }
     }
- 
- 
+
+
 /* all-in-one hash function */
 int Skein_Hash(int blkSize,int hashbitlen, const BitSequence *data, /* all-in-one call */
                 DataLength databitlen,BitSequence *hashval)
@@ -130,43 +130,43 @@ int Skein_Hash(int blkSize,int hashbitlen, const BitSequence *data, /* all-in-on
         }
     return r;
     }
- 
+
 void ShowBytes(uint_t cnt,const u08b_t *b)
     { /* formatted output of byte array */
     uint_t i;
- 
+
     for (i=0;i < cnt;i++)
-        {    
+        {
         if (i %16 ==  0) printf("    ");
         else if (i % 4 == 0) printf(" ");
         printf(" %02X",b[i]);
         if (i %16 == 15 || i==cnt-1) printf("\n");
-        }    
+        }
     }
- 
+
 int NumberOfSetBits(int i)
 {
     i = i - ((i >> 1) & 0x55555555);
     i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
     return (((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
 }
- 
+
 int doHash(char *b,int len)
 {
     u08b_t      hashVal[1028];
     uint_t      oneBlk;
     int i, diff = 0;
     oneBlk = 8*len;
- 
+
     if (Skein_Hash(1024,1024,b,oneBlk,hashVal) != SKEIN_SUCCESS)
         printf("Skein_Hash != SUCCESS");
- 
+
     for(i = 0; i < 128; i++) {
         diff += NumberOfSetBits(target[i] ^ hashVal[i]);
     }
- 
+
     return diff;
- 
+
 }
 
 
@@ -247,7 +247,7 @@ ascii_incr(char *str)
 		eos--;
 	}
 }
- 
+
 /*
  ./xkcd prefix target num
  target - upper bound of valid hashes to output to user
@@ -259,13 +259,13 @@ int main(int argc,char *argv[])
     char data[1024];
     int diff = 0;
     int target = atoi(argv[1]);
-    char *reporter = argv[2]; 
+    char *reporter = argv[2];
     //BLOCK SIZE
     int num = 50000000;
     //Request to get the block start position
     char *url = "http://crackertracker.computmaxer.net/next_block";
     char *content = NULL;
-    
+
     while(true){
     	content = do_web_request(url);
 
@@ -283,5 +283,4 @@ int main(int argc,char *argv[])
 	    ascii_incr(data);
         }
     }
- 
 }
