@@ -279,6 +279,7 @@ int main(int argc,char *argv[])
 			printf("%s->%d\n", data, diff);
 			sprintf(diffStr, "%d", diff);
 
+			// why segfault? nooooo
 			do_web_request(url, 6, "original", data, "diff", diffStr, "submitted_by", reporter);
 			target = diff;
 		}
