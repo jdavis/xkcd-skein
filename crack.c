@@ -251,7 +251,7 @@ ascii_incr(char *str)
 void usage() {
     printf("usage: xkcd (target) (reporter)\n");
     printf("\ttarget - upper bound of valid hashes to output to user\n");
-    printf("\treporter - reporter name for for reporting a successful hash\n");
+    printf("\treporter - reporter name for reporting a successful hash\n");
 }
 
 /*
