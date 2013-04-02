@@ -194,7 +194,7 @@ char *do_web_request(char *url)
     curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &response);
 
     /* perform the request */
-    if (curl_easy_perform(curl_handle) != 0) return NULL;
+    if (curl_easy_perform(curl_handle) != 0) response = NULL;
 
     /* cleaning all curl stuff */
     curl_easy_cleanup(curl_handle);
