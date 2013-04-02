@@ -1,6 +1,6 @@
 WARNINGS = -Wall
 CC = gcc
-CFLAGS = -o3 $(WARNINGS)
+CFLAGS = -O3 $(WARNINGS)
 TARGET = xkcd
 LIBS = -lcurl
 DEPS = skein.o skein_block.o crack.o
