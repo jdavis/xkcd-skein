@@ -28,105 +28,105 @@ u08b_t target[] = {0x5b,0x4d,0xa9,0x5f,0x5f,0xa0,0x82,0x80,
 /* function prototypes to define later */
 char *do_web_request(char *url);
 size_t static write_callback_func(void *buffer,
-                        size_t size,
-                        size_t nmemb,
-                        void *userp);
+						size_t size,
+						size_t nmemb,
+						void *userp);
 inline bool ascii_incr(char *str);
 inline void ascii_incr_char(char *c, bool *carry_inout);
 
 
 /* select the context size and init the context */
 int Skein_Init(hashState *state) {
-    state->statebits = 64*SKEIN1024_STATE_WORDS;
-    return Skein1024_Init(&state->u.ctx1024, 1024);
+	state->statebits = 64*SKEIN1024_STATE_WORDS;
+	return Skein1024_Init(&state->u.ctx1024, 1024);
 }
 
 /* process data to be hashed */
 int Skein_Update(hashState *state, const BitSequence *data, DataLength databitlen)
-    {
-    /* only the final Update() call is allowed do partial bytes, else assert an error */
-    Skein_Assert((state->u.h.T[1] & SKEIN_T1_FLAG_BIT_PAD) == 0 || databitlen == 0, FAIL);
+	{
+	/* only the final Update() call is allowed do partial bytes, else assert an error */
+	Skein_Assert((state->u.h.T[1] & SKEIN_T1_FLAG_BIT_PAD) == 0 || databitlen == 0, FAIL);
 
-    if ((databitlen & 7) == 0) {
-            return Skein1024_Update(&state->u.ctx1024,data,databitlen >> 3);
-        }
-    else
-        {
-        size_t bCnt = (databitlen >> 3) + 1;                  /* number of bytes to handle */
-        u08b_t mask,*p;
+	if ((databitlen & 7) == 0) {
+			return Skein1024_Update(&state->u.ctx1024,data,databitlen >> 3);
+		}
+	else
+		{
+		size_t bCnt = (databitlen >> 3) + 1;                  /* number of bytes to handle */
+		u08b_t mask,*p;
 
 #if (!defined(_MSC_VER)) || (MSC_VER >= 1200)                 /* MSC v4.2 gives (invalid) warning here!!  */
-        Skein_assert(&state->u.h == &state->u.ctx1024.h);
+		Skein_assert(&state->u.h == &state->u.ctx1024.h);
 #endif
-        Skein1024_Update(&state->u.ctx1024,data,bCnt);
-        p    = state->u.ctx1024.b;
+		Skein1024_Update(&state->u.ctx1024,data,bCnt);
+		p    = state->u.ctx1024.b;
 
-        Skein_Set_Bit_Pad_Flag(state->u.h);                     /* set tweak flag for the final call */
-        /* now "pad" the final partial byte the way NIST likes */
-        bCnt = state->u.h.bCnt;         /* get the bCnt value (same location for all block sizes) */
-        Skein_assert(bCnt != 0);        /* internal sanity check: there IS a partial byte in the buffer! */
-        mask = (u08b_t) (1u << (7 - (databitlen & 7)));         /* partial byte bit mask */
-        p[bCnt-1]  = (u08b_t)((p[bCnt-1] & (0-mask)) | mask);   /* apply bit padding on final byte (in the buffer) */
+		Skein_Set_Bit_Pad_Flag(state->u.h);                     /* set tweak flag for the final call */
+		/* now "pad" the final partial byte the way NIST likes */
+		bCnt = state->u.h.bCnt;         /* get the bCnt value (same location for all block sizes) */
+		Skein_assert(bCnt != 0);        /* internal sanity check: there IS a partial byte in the buffer! */
+		mask = (u08b_t) (1u << (7 - (databitlen & 7)));         /* partial byte bit mask */
+		p[bCnt-1]  = (u08b_t)((p[bCnt-1] & (0-mask)) | mask);   /* apply bit padding on final byte (in the buffer) */
 
-        return SUCCESS;
-        }
-    }
+		return SUCCESS;
+		}
+	}
 
 /* finalize hash computation and output the result (hashbitlen bits) */
 int Skein_Final(hashState *state, BitSequence *hashval) {
-    return Skein1024_Final(&state->u.ctx1024,hashval);
+	return Skein1024_Final(&state->u.ctx1024,hashval);
 }
 
 
 /* all-in-one hash function */
 int Skein_Hash(const BitSequence *data, /* all-in-one call */
-                DataLength databitlen,BitSequence *hashval)
-    {
-    hashState  state;
-    int r = Skein_Init(&state);
-    if (r == SKEIN_SUCCESS)
-        { /* these calls do not fail when called properly */
-        r = Skein_Update(&state,data,databitlen);
-        Skein_Final(&state,hashval);
-        }
-    return r;
-    }
+               DataLength databitlen,BitSequence *hashval)
+	{
+	hashState  state;
+	int r = Skein_Init(&state);
+	if (r == SKEIN_SUCCESS)
+		{ /* these calls do not fail when called properly */
+		r = Skein_Update(&state,data,databitlen);
+		Skein_Final(&state,hashval);
+		}
+	return r;
+	}
 
 void ShowBytes(uint_t cnt,const u08b_t *b)
-    { /* formatted output of byte array */
-    uint_t i;
+	{ /* formatted output of byte array */
+	uint_t i;
 
-    for (i=0;i < cnt;i++)
-        {
-        if (i %16 ==  0) printf("    ");
-        else if (i % 4 == 0) printf(" ");
-        printf(" %02X",b[i]);
-        if (i %16 == 15 || i==cnt-1) printf("\n");
-        }
-    }
+	for (i=0;i < cnt;i++)
+		{
+		if (i %16 ==  0) printf("    ");
+		else if (i % 4 == 0) printf(" ");
+		printf(" %02X",b[i]);
+		if (i %16 == 15 || i==cnt-1) printf("\n");
+		}
+	}
 
 int NumberOfSetBits(int i)
 {
-    i = i - ((i >> 1) & 0x55555555);
-    i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
-    return (((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
+	i = i - ((i >> 1) & 0x55555555);
+	i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
+	return (((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
 }
 
 int doHash(char *b,int len)
 {
-    u08b_t      hashVal[1028];
-    uint_t      oneBlk;
-    int i, diff = 0;
-    oneBlk = 8*len;
+	u08b_t      hashVal[1028];
+	uint_t      oneBlk;
+	int i, diff = 0;
+	oneBlk = 8*len;
 
-    if (Skein_Hash((unsigned char *)b,oneBlk,hashVal) != SKEIN_SUCCESS)
-        printf("Skein_Hash != SUCCESS");
+	if (Skein_Hash((unsigned char *)b,oneBlk,hashVal) != SKEIN_SUCCESS)
+		printf("Skein_Hash != SUCCESS");
 
-    for(i = 0; i < 128; i++) {
-        diff += NumberOfSetBits(target[i] ^ hashVal[i]);
-    }
+	for(i = 0; i < 128; i++) {
+		diff += NumberOfSetBits(target[i] ^ hashVal[i]);
+	}
 
-    return diff;
+	return diff;
 
 }
 
@@ -134,50 +134,50 @@ int doHash(char *b,int len)
 /* the function to return the content for a url */
 char *do_web_request(char *url)
 {
-    /* keeps the handle to the curl object */
-    CURL *curl_handle = NULL;
-    /* to keep the response */
-    char *response = NULL;
-    CURLcode error;
+	/* keeps the handle to the curl object */
+	CURL *curl_handle = NULL;
+	/* to keep the response */
+	char *response = NULL;
+	CURLcode error;
 
-    /* initializing curl and setting the url */
-    curl_handle = curl_easy_init();
-    curl_easy_setopt(curl_handle, CURLOPT_URL, url);
-    curl_easy_setopt(curl_handle, CURLOPT_HTTPGET, 1);
+	/* initializing curl and setting the url */
+	curl_handle = curl_easy_init();
+	curl_easy_setopt(curl_handle, CURLOPT_URL, url);
+	curl_easy_setopt(curl_handle, CURLOPT_HTTPGET, 1);
 
-    /* follow locations specified by the response header */
-    curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1);
+	/* follow locations specified by the response header */
+	curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1);
 
-    /* setting a callback function to return the data */
-    curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_callback_func);
+	/* setting a callback function to return the data */
+	curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_callback_func);
 
-    /* passing the pointer to the response as the callback parameter */
-    curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &response);
+	/* passing the pointer to the response as the callback parameter */
+	curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &response);
 
-    /* perform the request */
-    if ((error = curl_easy_perform(curl_handle)) != CURLE_OK) {
-        response = NULL;
-        fprintf(stderr, "Error: %d - %s\n", error, curl_easy_strerror(error));
-    }
+	/* perform the request */
+	if ((error = curl_easy_perform(curl_handle)) != CURLE_OK) {
+		response = NULL;
+		fprintf(stderr, "Error: %d - %s\n", error, curl_easy_strerror(error));
+	}
 
-    /* cleaning all curl stuff */
-    curl_easy_cleanup(curl_handle);
+	/* cleaning all curl stuff */
+	curl_easy_cleanup(curl_handle);
 
-    return response;
+	return response;
 }
 
 /* the function to invoke as the data recieved */
 size_t static write_callback_func(void *buffer,
-                        size_t size,
-                        size_t nmemb,
-                        void *userp)
+                                  size_t size,
+                                  size_t nmemb,
+                                  void *userp)
 {
-    char **response_ptr =  (char**)userp;
+	char **response_ptr =  (char**)userp;
 
-    /* assuming the response is a string */
-    *response_ptr = strndup(buffer, (size_t)(size *nmemb));
+	/* assuming the response is a string */
+	*response_ptr = strndup(buffer, (size_t)(size *nmemb));
 
-    return nmemb;
+	return nmemb;
 }
 
 inline void
@@ -215,9 +215,9 @@ ascii_incr(char *str)
 }
 
 void usage() {
-    printf("usage: xkcd (target) (reporter)\n");
-    printf("\ttarget - upper bound of valid hashes to output to user\n");
-    printf("\treporter - reporter name for reporting a successful hash\n");
+	printf("usage: xkcd (target) (reporter)\n");
+	printf("\ttarget - upper bound of valid hashes to output to user\n");
+	printf("\treporter - reporter name for reporting a successful hash\n");
 }
 
 /*
@@ -227,44 +227,44 @@ void usage() {
 */
 int main(int argc,char *argv[])
 {
-    int i;
-    char data[1024];
-    int diff = 0;
+	int i;
+	char data[1024];
+	int diff = 0;
 
-    if (argc != 3) {
-        usage();
-        return 1;
-    }
+	if (argc != 3) {
+		usage();
+		return 1;
+	}
 
-    int target = atoi(argv[1]);
-    char *reporter = argv[2];
-    //BLOCK SIZE
-    int num = 50000000;
-    //Request to get the block start position
-    char *url = "http://crackertracker.computmaxer.net/next_block";
-    char *content = NULL;
+	int target = atoi(argv[1]);
+	char *reporter = argv[2];
+	//BLOCK SIZE
+	int num = 50000000;
+	//Request to get the block start position
+	char *url = "http://crackertracker.computmaxer.net/next_block";
+	char *content = NULL;
 
-    while(true){
-        content = do_web_request(url);
+	while(true){
+		content = do_web_request(url);
 
-        if (content == NULL) {
-            fprintf(stderr, "Failed to contact server, trying again\n");
-            continue;
-        }
+		if (content == NULL) {
+			fprintf(stderr, "Failed to contact server, trying again\n");
+			continue;
+		}
 
-        strcpy(data, content);
+		strcpy(data, content);
 
-    	for(i = 0; i < num; i++) {
-            //snprintf(data, 1024, "%s%d", argv[1],i);
-            diff = doHash(data,strlen(data));
-            if(diff < target) {
-            	printf("%s->%d\n",data,diff);
-        		char buffer[4096];
-        		snprintf( buffer, sizeof(buffer), "http://crackertracker.computmaxer.net/submit/?original=%s&diff=%d&submitted_by=%s", data, diff, reporter);
-        		do_web_request(buffer);
-                target = diff;
-            }
-	    ascii_incr(data);
-        }
-    }
+		for(i = 0; i < num; i++) {
+			//snprintf(data, 1024, "%s%d", argv[1],i);
+			diff = doHash(data,strlen(data));
+			if(diff < target) {
+				printf("%s->%d\n",data,diff);
+				char buffer[4096];
+				snprintf( buffer, sizeof(buffer), "http://crackertracker.computmaxer.net/submit/?original=%s&diff=%d&submitted_by=%s", data, diff, reporter);
+				do_web_request(buffer);
+				target = diff;
+			}
+			ascii_incr(data);
+		}
+	}
 }
