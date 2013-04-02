@@ -244,14 +244,16 @@ void usage() {
 
 /*
  ./xkcd prefix target num
- target - upper bound of valid hashes to output to user
+ target - upper bound of valid hashes to output to user (auto decrements)
  reporter - person or machine name who reported a successful hash. Any string.
 */
 int main(int argc,char *argv[])
 {
 	int i;
+	char url[] = "http://crackertracker.computmaxer.net/submit/";
 	char data[1024];
 	int diff = 0;
+	char diffStr[8];
 
 	if (argc != 3) {
 		usage();
@@ -264,7 +266,7 @@ int main(int argc,char *argv[])
 	
 	srand(time(NULL));
 	for (i=0; i<32; i++) {
-		data[i] = (rand() % 20) + 65;
+		data[i] = (rand() % 26) + 65;
 	}
 	data[32] = 0;
 
@@ -275,10 +277,7 @@ int main(int argc,char *argv[])
 
 		if(diff < target) {
 			printf("%s->%d\n", data, diff);
-            char diffStr[8];
-            char url[] = "http://crackertracker.computmaxer.net/submit/";
-
-            sprintf(diffStr, "%d", diff);
+			sprintf(diffStr, "%d", diff);
 
 			do_web_request(url, 6, "original", data, "diff", diffStr, "submitted_by", reporter);
 			target = diff;
