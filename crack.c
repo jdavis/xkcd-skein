@@ -248,6 +248,12 @@ ascii_incr(char *str)
 	}
 }
 
+void usage() {
+    printf("usage: xkcd (target) (reporter)\n");
+    printf("\ttarget - upper bound of valid hashes to output to user\n");
+    printf("\treporter - reporter name for for reporting a successful hash\n");
+}
+
 /*
  ./xkcd prefix target num
  target - upper bound of valid hashes to output to user
@@ -258,6 +264,12 @@ int main(int argc,char *argv[])
     int i;
     char data[1024];
     int diff = 0;
+
+    if (argc != 3) {
+        usage();
+        return 1;
+    }
+
     int target = atoi(argv[1]);
     char *reporter = argv[2];
     //BLOCK SIZE
