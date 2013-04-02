@@ -26,7 +26,7 @@ u08b_t target[] = {0x5b,0x4d,0xa9,0x5f,0x5f,0xa0,0x82,0x80,
                    0xc7,0x9c,0xc7,0x01,0x97,0xe1,0xc5,0xe7,
                    0xf9,0x02,0xfb,0x53,0xca,0x18,0x58,0xb6};
 /* function prototypes to define later */
-char *do_web_request(char *url, int argc, ...);
+char *do_web_request(char *url);
 size_t static write_callback_func(void *buffer,
 						size_t size,
 						size_t nmemb,
@@ -132,39 +132,17 @@ int doHash(char *b,int len)
 
 
 /* the function to return the content for a url */
-char *do_web_request(char *url, int argc, ...)
+char *do_web_request(char *url)
 {
-    va_list argv;
 	/* keeps the handle to the curl object */
 	CURL *curl_handle = NULL;
 	/* to keep the response */
-	char *response = NULL, *c = NULL, *next = NULL;
-    char request[4096];
+	char *response = NULL;
 	CURLcode error;
-    int x;
-
-    strcat(request, url);
-    strcat(request, "?");
-
-    va_start(argv, argc);
-    for(x = 0; x < argc; x++) {
-        // Add value name
-        c = (char *) va_arg(argv, char *);
-        strcat(request, c);
-        strcat(request, "=");
-
-        // Add value
-        c = (char *) va_arg(argv, char *);
-        next = curl_easy_escape(curl_handle, c, strlen(c));
-        strcat(request, next);
-        strcat(request, "?");
-        curl_free(next);
-    }
-    va_end(argv);
 
 	/* initializing curl and setting the url */
 	curl_handle = curl_easy_init();
-	curl_easy_setopt(curl_handle, CURLOPT_URL, request);
+	curl_easy_setopt(curl_handle, CURLOPT_URL, url);
 	curl_easy_setopt(curl_handle, CURLOPT_HTTPGET, 1);
 
 	/* follow locations specified by the response header */
@@ -187,6 +165,7 @@ char *do_web_request(char *url, int argc, ...)
 
 	return response;
 }
+
 
 /* the function to invoke as the data recieved */
 size_t static write_callback_func(void *buffer,
@@ -250,9 +229,9 @@ void usage() {
 int main(int argc,char *argv[])
 {
 	int i;
-	char url[] = "http://crackertracker.computmaxer.net/submit/";
 	char data[1024];
 	int diff = 0;
+	char buffer[4096];
 	char diffStr[8];
 
 	if (argc != 3) {
@@ -279,8 +258,10 @@ int main(int argc,char *argv[])
 			printf("%s->%d\n", data, diff);
 			sprintf(diffStr, "%d", diff);
 
-			// why segfault? nooooo
-			do_web_request(url, 6, "original", data, "diff", diffStr, "submitted_by", reporter);
+			snprintf(buffer, sizeof(buffer), "http://crackertracker.computmaxer.net/submit/?original=%s&diff=%d&submitted_by=%s", data, diff, reporter);
+			char *response = do_web_request(buffer);
+			printf("%s\n", response);
+
 			target = diff;
 		}
 		ascii_incr(data);
