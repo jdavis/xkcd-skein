@@ -155,9 +155,9 @@ char *do_web_request(char *url)
     curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &response);
 
     /* perform the request */
-    if ((error = curl_easy_perform(curl_handle)) != 0) {
+    if ((error = curl_easy_perform(curl_handle)) != CURLE_OK) {
         response = NULL;
-        fprintf(stderr, "%s\n", curl_easy_strerror(error));
+        fprintf(stderr, "Error: %d - %s\n", error, curl_easy_strerror(error));
     }
 
     /* cleaning all curl stuff */
@@ -177,6 +177,7 @@ size_t static write_callback_func(void *buffer,
     /* assuming the response is a string */
     *response_ptr = strndup(buffer, (size_t)(size *nmemb));
 
+    return nmemb;
 }
 
 inline void
