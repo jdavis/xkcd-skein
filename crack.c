@@ -228,9 +228,10 @@ void usage() {
 */
 int main(int argc,char *argv[])
 {
-	int i;
+	int i = 0;
 	char data[1024];
 	int diff = 0;
+	int best = 512;
 	char buffer[4096];
 	char diffStr[8];
 
@@ -252,7 +253,20 @@ int main(int argc,char *argv[])
 	printf("Starting with a prefix of:\n%s\n", data);
 
 	while(true){
+
 		diff = doHash(data,strlen(data));
+
+		if (i < 10000000) {
+			i++;
+		} else if (i == 10000000) {
+			printf("First 10 million hashed; best was %u bits wrong;\n"
+				"no further messages will be reported until the good hashes (<%d) are found.\n", best, target);
+			i++;
+		}
+
+		if (diff < best) {
+			best = diff;
+		}
 
 		if(diff < target) {
 			printf("%s->%d\n", data, diff);
