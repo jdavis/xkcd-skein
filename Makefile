@@ -4,7 +4,7 @@ CFLAGS = -O3 $(WARNINGS)
 TARGET = xkcd
 LIBS = -lcurl
 DEPS = SHA3api_ref.o skein.o skein_block.o crack.o
-TESTDEPS = skein.o skein_block.o tests.o  
+TESTDEPS = tests.o  
 
 all: $(DEPS) $(TARGET) $(TESTS)
 
