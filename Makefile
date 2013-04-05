@@ -1,4 +1,4 @@
-WARNINGS = -Wall
+WARNINGS = -Wall --pedantic
 CC = gcc
 CFLAGS = -O3 $(WARNINGS)
 TARGET = xkcd

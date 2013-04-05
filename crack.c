@@ -18,7 +18,7 @@ inline void ascii_incr_char(char *c, bool *carry_inout);
 
 int NumberOfSetBits(u64b_t c) 
 {
-	// 64-bit method
+	/* 64-bit method */
 	static const u64b_t S[] = {1,2,4,8,16,32};
 	static const u64b_t B[] = {0x5555555555555555,
 	                           0x3333333333333333,
@@ -147,16 +147,19 @@ int main(int argc,char *argv[])
 	                  0xf99ca716e96d8269,0x247d34d49cc74cc9,
 	                  0x73a590233eaa67b5,0x4066675e8aa473a3,
 	                  0xe7c5e19701c79cc7,0xb65818ca53fb02f9};
+	
+	int target     = 512;
+	char *reporter = "Unknown";
 
 	if (argc != 3) {
 		usage();
 		return -1;
 	}
 
-	int target = atoi(argv[1]);
-	char *reporter = argv[2];
+	target   = atoi(argv[1]);
+	reporter = argv[2];
 	
-	// set random prefix
+	/* set random prefix */
 	srand(time(NULL) * getpid());
 	for (i=0; i<32; i++) {
 		data[i] = (rand() % 26) + 65;
@@ -177,12 +180,11 @@ int main(int argc,char *argv[])
 			printf("%s->%d\n", data, diff);
 
 			snprintf(buffer, sizeof(buffer), "http://crackertracker.computmaxer.net/submit/?original=%s&diff=%d&submitted_by=%s", data, diff, reporter);
-			char *response = do_web_request(buffer);
-			printf("%s\n", response);
+			printf("%s\n", do_web_request(buffer));
 
 			target = diff;
 
-			if (target == 0) return 0; // win!
+			if (target == 0) return 0; /* win! */
 		}
 
 		ascii_incr(data);

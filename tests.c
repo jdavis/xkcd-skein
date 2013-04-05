@@ -180,7 +180,7 @@ void Process_Block(Skein_Context_t *ctx,const uint8_t *blkPtr, size_t blkCnt, si
 		ctx->X[14] = X14 ^ w[14];
 		ctx->X[15] = X15 ^ w[15];
 
-		ts[1] &= ~(1ULL << 62); /* flag = ~(POS_FIRST) */
+		ts[1] &= ~((uint64_t) 1 << 62); /* flag = ~(POS_FIRST) */
 		blkPtr += BLOCK_BYTES;
 
 	} while (--blkCnt);
@@ -221,7 +221,7 @@ void HashCompact1024(const uint8_t *msg, size_t msgByteCnt, uint8_t *hashVal)
 	memcpy(ctx->X, precomputed, sizeof(ctx->X));
 	(ctx)->h.bCnt = 0;
 	(ctx)->h.T[0] = 0;                            /* T[0]=byte cnt, T[1]=flags */
-	(ctx)->h.T[1] = (1ULL << 62) | (48ULL << 56); /* flags = POS_FIRST | TYPE_MSG */
+	(ctx)->h.T[1] = ((uint64_t) 1 << 62) | ((uint64_t) 48 << 56); /* flags = POS_FIRST | TYPE_MSG */
 
 	/* UPDATE */
 	/**************************************************/
@@ -239,7 +239,7 @@ void HashCompact1024(const uint8_t *msg, size_t msgByteCnt, uint8_t *hashVal)
 	
 	/* FINALIZE */
 	/**************************************************/
-	(ctx)->h.T[1] |= (1ULL << 63);     /* flags = POS_FINAL */
+	(ctx)->h.T[1] |= ((uint64_t) 1 << 63);     /* flags = POS_FINAL */
 	Process_Block(ctx, ctx->b, 1, ctx->h.bCnt);  /* process the final block */
 
 	/* now output the result */
@@ -248,7 +248,7 @@ void HashCompact1024(const uint8_t *msg, size_t msgByteCnt, uint8_t *hashVal)
 	
 	(ctx)->h.bCnt = 0;
 	(ctx)->h.T[0] = 0;
-	(ctx)->h.T[1] = (1ULL << 62) | (63ULL << 56) | (1ULL << 63); /* flags = POS_FIRST | OUT | FINAL */
+	(ctx)->h.T[1] = ((uint64_t) 1 << 62) | ((uint64_t) 63 << 56) | ((uint64_t) 1 << 63); /* flags = POS_FIRST | OUT | FINAL */
 
 	Process_Block(ctx, ctx->b, 1, sizeof(uint64_t));
 
@@ -258,7 +258,7 @@ void HashCompact1024(const uint8_t *msg, size_t msgByteCnt, uint8_t *hashVal)
 
 int NumberOfSetBits(uint64_t c) 
 {
-	// 64-bit method
+	/* 64-bit method */
 	static const uint64_t S[] = {1,2,4,8,16,32};
 	static const uint64_t B[] = 
 	{
@@ -283,8 +283,8 @@ int NumberOfSetBits(uint64_t c)
 
 int main()
 {
-	char *test1 = "AOALXXMTHQJGGRGWFJKMKMTLFTpoaYYq"; // should be 387 diff
-	char *test2 = "aaaaaaaaaaaaaaaaaaaaaffhilyDTxVUW"; // should be 406 diff
+	char *test1 = "AOALXXMTHQJGGRGWFJKMKMTLFTpoaYYq";  /* should be 387 diff */
+	char *test2 = "aaaaaaaaaaaaaaaaaaaaaffhilyDTxVUW"; /* should be 406 diff */
 	uint64_t hashval1[16], hashval2[16];
 	int diff1 = 0, diff2 = 0, i;
 
