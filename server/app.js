@@ -16,8 +16,6 @@ var http = require('http'),
     base = alpha.length,
     blocks = [],
     Generator = function () {
-        // Number of characters in the current string
-        this.size = 1;
         // String we are on, in reverse
         this.current = [0];
     },
