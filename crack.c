@@ -9,18 +9,18 @@
 #include <unistd.h>
 
 #include "skein.h"
-#include "SHA3api_ref.h"
 
 char *do_web_request(char *url);
 size_t static write_callback_func(void *buffer, size_t size, size_t nmemb, void *userp);
 inline bool ascii_incr(char *str);
 inline void ascii_incr_char(char *c, bool *carry_inout);
 
-int NumberOfSetBits(u64b_t c) 
+
+int NumberOfSetBits(uint64_t c) 
 {
 	/* 64-bit method */
-	static const u64b_t S[] = {1,2,4,8,16,32};
-	static const u64b_t B[] = {0x5555555555555555,
+	static const uint64_t S[] = {1,2,4,8,16,32};
+	static const uint64_t B[] = {0x5555555555555555,
 	                           0x3333333333333333,
 	                           0x0F0F0F0F0F0F0F0F,
 	                           0x00FF00FF00FF00FF,
@@ -35,6 +35,7 @@ int NumberOfSetBits(u64b_t c)
 	c = ((c >> S[5]) + c) & B[5];
 	return c;
 }
+
 
 /* the function to return the content for a url */
 char *do_web_request(char *url) 
@@ -86,8 +87,8 @@ size_t static write_callback_func(void *buffer,
 	return nmemb;
 }
 
-inline void
-ascii_incr_char(char *c, bool *carry_inout)
+
+inline void ascii_incr_char(char *c, bool *carry_inout)
 {
 	if (*carry_inout) {
 		if (*c != 'z') {
@@ -101,8 +102,8 @@ ascii_incr_char(char *c, bool *carry_inout)
 	}
 }
 
-inline bool
-ascii_incr(char *str)
+
+inline bool ascii_incr(char *str)
 {
 	char *eos = str + strlen(str) - 1;
 	bool carry = true;
@@ -120,12 +121,14 @@ ascii_incr(char *str)
 	}
 }
 
+
 void usage() 
 {
 	printf("usage: xkcd (target) (reporter)\n");
 	printf("\ttarget - upper bound of valid hashes to output to user\n");
 	printf("\treporter - reporter name for reporting a successful hash\n");
 }
+
 
 /*
  ./xkcd prefix target num
@@ -135,19 +138,17 @@ void usage()
 int main(int argc,char *argv[])
 {
 	int i = 0;
-	char data[1024];
+	char data[33];
 	int diff = 0;
 	char buffer[4096];
-	u64b_t hashVal[16];
-	u64b_t match[] = {0x8082a05f5fa94d5b,0xc818f444df7998fc,
-	                  0x7d75b724a42bf1f9,0x4f4c0daefbbd2be0,
-	                  0x04fec50cc81793df,0x97f26c46739042c6,
-	                  0xf6d2dd9959c2b806,0x877b97cc75440d54,
-	                  0x8f9bf123e07b75f4,0x88b7862872d73540,
-	                  0xf99ca716e96d8269,0x247d34d49cc74cc9,
-	                  0x73a590233eaa67b5,0x4066675e8aa473a3,
-	                  0xe7c5e19701c79cc7,0xb65818ca53fb02f9};
-	
+	uint64_t hashVal[16];
+	uint64_t match[] = 
+	{
+		0x8082a05f5fa94d5b,0xc818f444df7998fc,0x7d75b724a42bf1f9,0x4f4c0daefbbd2be0,
+		0x04fec50cc81793df,0x97f26c46739042c6,0xf6d2dd9959c2b806,0x877b97cc75440d54,
+		0x8f9bf123e07b75f4,0x88b7862872d73540,0xf99ca716e96d8269,0x247d34d49cc74cc9,
+		0x73a590233eaa67b5,0x4066675e8aa473a3,0xe7c5e19701c79cc7,0xb65818ca53fb02f9
+	};
 	int target     = 512;
 	char *reporter = "Unknown";
 
@@ -169,7 +170,7 @@ int main(int argc,char *argv[])
 	printf("Starting with a prefix of:\n%s\n", data);
 
 	while(true){
-		Hash(1024, (u08b_t *) data, strlen(data)*8, (u08b_t *) hashVal);
+		HashSkein1024((const uint8_t *) data, strlen(data), (uint8_t *) hashVal);
 
 		diff = 0;
 		for(i = 0; i < 16; i++) {
